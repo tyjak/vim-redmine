@@ -113,6 +113,18 @@ function! RedmineViewAssignedTicket()
     call RedmineSearchTicket({'assigned_to_id' : g:redmine_author_id})
 endfunc
 
+function! RedmineGetTicket(id)
+    let url = RedmineCreateCommand('issue_list', a:id, {'include' : 'journals'})
+    let ret = webapi#http#get(url)
+    if ret.content == ' '
+        return 0
+    endif
+
+    let num = 0
+    let dom = webapi#xml#parse(ret.content)
+    return dom.find("subject").value()
+endfunc
+
 function! RedmineViewTicket(id)
     let url = RedmineCreateCommand('issue_list', a:id, {'include' : 'journals'})
     let ret = webapi#http#get(url)
