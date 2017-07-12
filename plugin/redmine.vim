@@ -39,6 +39,8 @@ command -nargs=* RedmineEditTicket :call RedmineEditTicket(<f-args>)
 command -nargs=* RedmineViewTicket :call RedmineViewTicket(<f-args>)
 command -nargs=* RedmineAddTicket :call RedmineAddTicket(<f-args>)
 command -nargs=* RedmineAddTicketWithDiscription :call RedmineAddTicketWithDiscription(<f-args>)
+command -nargs=1 RedmineGetSVNIssue :call RedmineGetSVNLogTicket(<f-args>,'Issue')
+command -nargs=1 RedmineGetSVNFixed :call RedmineGetSVNLogTicket(<f-args>,'Fixed')
 
 function! RedmineSearchTicket(args)
     let stat = RedmineAPIIssueList(a:args)
@@ -120,9 +122,20 @@ function! RedmineGetTicket(id)
         return 0
     endif
 
-    let num = 0
     let dom = webapi#xml#parse(ret.content)
     return dom.find("subject").value()
+endfunc
+
+function! RedmineGetSVNLogTicket(id,state)
+    let url = RedmineCreateCommand('issue_list', a:id, {'include' : 'journals'})
+    let ret = webapi#http#get(url)
+    if ret.content == ' '
+        return 0
+    endif
+
+    let dom = webapi#xml#parse(ret.content)
+    let svnline = a:state . ' #' . a:id . ' ' . dom.find("subject").value()
+    call append('.',svnline)
 endfunc
 
 function! RedmineViewTicket(id)
